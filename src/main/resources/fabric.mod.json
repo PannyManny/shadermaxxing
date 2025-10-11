@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "pannysandbox",
+  "version": "${version}",
+  "name": "pannysandbox",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/pannysandbox/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "dev.panimal.pannysandbox.client.PannysandboxDataGenerator"
+    ],
+    "client": [
+      "dev.panimal.pannysandbox.client.PannysandboxClient"
+    ],
+    "main": [
+      "dev.panimal.pannysandbox.Pannysandbox"
+    ]
+  },
+  "mixins": [
+    "pannysandbox.mixins.json",
+    {
+      "config": "pannysandbox.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

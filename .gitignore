@@ -1,11 +1,9 @@
-# Gradle files
 .gradle/
-
-# IntelliJ project files
 .idea/
 
-# Build output
-.build/
+gradle/
+idea/
+run/
 
-# Run configurations
-.run/
+build/
+**/build/
