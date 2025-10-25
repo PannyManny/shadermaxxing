@@ -7,23 +7,20 @@
   "authors": [],
   "contact": {},
   "license": "All-Rights-Reserved",
-  "icon": "assets/pannysandbox/icon.png",
+  "icon": "assets/shadermaxxing/icon.png",
   "environment": "*",
   "entrypoints": {
-    "fabric-datagen": [
-      "dev.panimal.pannysandbox.client.PannysandboxDataGenerator"
-    ],
     "client": [
-      "dev.panimal.pannysandbox.client.PannysandboxClient"
+      "dev.panimal.shadermaxxing.client.ShadermaxxingClient"
     ],
     "main": [
-      "dev.panimal.pannysandbox.Pannysandbox"
+      "dev.panimal.shadermaxxing.Shadermaxxing"
     ]
   },
   "mixins": [
-    "pannysandbox.mixins.json",
+    "shadermaxxing.mixins.json",
     {
-      "config": "pannysandbox.client.mixins.json",
+      "config": "shadermaxxing.client.mixins.json",
       "environment": "client"
     }
   ],

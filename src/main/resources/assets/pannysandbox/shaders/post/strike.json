@@ -1,0 +1,23 @@
+{
+  "targets": [
+    "strike",
+    "chromatic_abjuration"
+  ],
+  "passes": [
+    {
+      "name": "shadermaxxing:strike",
+      "intarget": "minecraft:main",
+      "outtarget": "strike"
+    },
+    {
+      "name": "shadermaxxing:chromatic_abjuration",
+      "intarget": "strike",
+      "outtarget": "chromatic_abjuration"
+    },
+    {
+      "name": "blit",
+      "intarget": "chromatic_abjuration",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}
