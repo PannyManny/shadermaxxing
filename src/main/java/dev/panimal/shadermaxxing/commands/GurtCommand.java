@@ -1,7 +1,6 @@
 package dev.panimal.shadermaxxing.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
-// import jdk.swing.interop.DispatcherWrapper;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;

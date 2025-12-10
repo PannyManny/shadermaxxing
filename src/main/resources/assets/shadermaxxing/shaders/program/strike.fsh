@@ -1,5 +1,5 @@
 #version 330 compatibility
-#define STEPS 400
+#define STEPS 300
 #define MIN_DIST 0.001
 #define MAX_DIST 2500.0
 
@@ -22,9 +22,10 @@ vec3 worldPos(vec3 point) {
 }
 
 // SDF
-float sdf(vec3 p, vec3 b) {
+float sdf( vec3 p, vec3 b )
+{
     vec3 q = abs(p) - b;
-    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 //
 
@@ -36,7 +37,7 @@ void main() {
     vec3 end_point   = worldPos(vec3(texCoord, depth)) - BlockPosition; // scene depth point
     vec3 dir = normalize(end_point - start_point);
 
-    vec3 halfSize = vec3(4.0);
+    vec3 radius = vec3(4.0);
 
     float traveled = 0.0;
     vec3 p = start_point;
@@ -45,7 +46,7 @@ void main() {
 
     for (int i = 0; i < STEPS; i++) {
         //
-        float d = sdf(p, halfSize);
+        float d = sdf(p, radius);
         //
         if (d <= MIN_DIST) {
             hit = true;

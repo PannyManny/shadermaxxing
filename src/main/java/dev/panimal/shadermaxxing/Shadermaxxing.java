@@ -1,8 +1,9 @@
 package dev.panimal.shadermaxxing;
 
 import dev.panimal.shadermaxxing.network.VFXSyncS2CPacket;
+import dev.panimal.shadermaxxing.registry.Commands;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -31,38 +32,6 @@ public class Shadermaxxing implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playS2C().register(VFXSyncS2CPacket.ID, VFXSyncS2CPacket.CODEC);
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            dispatcher.register(
-                    CommandManager.literal("shaderevent")
-                            .requires(source -> source.hasPermissionLevel(2))
-                            .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
-                                    .executes(ctx -> {
-                                        BlockPos pos = BlockPosArgumentType.getBlockPos(ctx, "pos");
-                                        ServerCommandSource source = ctx.getSource();
-                                        MinecraftServer server = source.getServer();
-
-                                        server.execute(() -> {
-                                            PacketByteBuf buf = PacketByteBufs.create();
-                                            buf.writeBlockPos(pos);
-
-                                            Collection<ServerPlayerEntity> targets = Optional.ofNullable(source.getEntity())
-                                                    .filter(ServerPlayerEntity.class::isInstance)
-                                                    .map(e -> ((ServerPlayerEntity) e).getWorld()
-                                                            .getPlayers().stream()
-                                                            .filter(p -> p instanceof ServerPlayerEntity)
-                                                            .map(p -> (ServerPlayerEntity) p)
-                                                            .collect(Collectors.toList())
-                                                    )
-                                                    .orElseGet(() -> server.getPlayerManager().getPlayerList());
-
-                                            for (ServerPlayerEntity player : targets) {
-                                                ServerPlayNetworking.send(player, new VFXSyncS2CPacket(pos));
-                                            }
-                                        });
-                                        return 1;
-                                    })
-                            )
-            );
-        });
+        CommandRegistrationCallback.EVENT.register(Commands::register);
     }
 }
