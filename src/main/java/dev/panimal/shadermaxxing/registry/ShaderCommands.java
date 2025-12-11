@@ -10,11 +10,11 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class Commands {
+public class ShaderCommands {
 
     public static void register(CommandDispatcher<ServerCommandSource>dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment)
     {
-        // GurtCommand.register(dispatcher);
+        GurtCommand.register(dispatcher);
         ShaderEventCommand.register(dispatcher);
     }
 
