@@ -107,18 +107,11 @@ void main() {
     bool hit = false;
     float maxRayLen = distance(start_point, end_point);
 
-    int materialCount = 0;
     vec3 matColor = vec3(0.0);
-    vec3 matTotalColor = vec3(0.0);
     float matOpacity = 0.0;
+    vec3 accumColor = vec3(0.0);
+    float accumAlpha = 0.0;
 
-    vec3 firstColor = vec3(0.0);
-    float firstOpacity = 0.0;
-    vec3 secondColor = vec3(0.0);
-    float secondOpacity = 0.0;
-    vec3 mixedColor = vec3(0.0);
-
-    int hitMat = MAT_NONE;
     int lastMat = MAT_NONE;
     vec3 hitLocalPos = vec3(0.0);
 
@@ -129,25 +122,15 @@ void main() {
         float d = configSDF(p, stepMat, stepLocalPos);
 
         if (d <= MIN_DIST) {
-            materialVisuals(stepMat, stepLocalPos, matColor, matOpacity);
-
             hit = true;
             hitLocalPos = stepLocalPos;
 
             if (stepMat != lastMat && stepMat != MAT_NONE) {
-                materialCount++;
+                materialVisuals(stepMat, stepLocalPos, matColor, matOpacity);
+                float alpha = clamp(matOpacity, 0.0, 1.0);
 
-                if (materialCount == 1) {
-                    firstColor = matColor;
-                    firstOpacity = matOpacity;
-                }
-
-                if (materialCount >= 2) {
-                    secondColor = matColor;
-                    secondOpacity = matOpacity;
-
-                    mixedColor = firstColor * firstOpacity + secondColor * (1 - firstOpacity);
-                }
+                accumColor += matColor * alpha * (1.0 - accumAlpha);
+                accumAlpha += alpha * (1.0 - accumAlpha);
 
                 lastMat = stepMat;
             }
@@ -163,12 +146,8 @@ void main() {
         p += dir * d;
     }
 
-    if (materialCount == 1 && matOpacity >= 0.999) {
-        fragColor = vec4(matColor, 1.0);
-    } else if (materialCount == 2) {
-        fragColor = vec4(mixedColor, 1.0);
-    } else if (materialCount == 1 && matOpacity <= 0.999) {
-        vec3 finalColor = mix(original, matColor, matOpacity);
+    if (hit) {
+        vec3 finalColor = mix(original, accumColor, accumAlpha);
         fragColor = vec4(finalColor, 1.0);
     } else {
         fragColor = vec4(original, 1.0);
