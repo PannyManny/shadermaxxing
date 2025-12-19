@@ -50,21 +50,21 @@ float sdCappedCylinder( vec3 p, float r, float h )
 }
 //
 
-// Configure shape(s)
+// Configure shapes' movement
 float configSDF(vec3 p, out int mat_id, out vec3 outLocalPos) {
     float d = 1e9;
     mat_id = MAT_NONE;
 
-    vec3 pivPos1 = p - vec3(0.0);
-    float oneSDF = sdCappedCylinder(pivPos1, 25.0, 0.5);
+    vec3 pivPos1 = p - vec3(0.0, 0.0, 0.0);
+    float oneSDF = sdSphere(pivPos1, 4.0);
     if (oneSDF < d) {
         d = oneSDF;
         mat_id = MAT_SDF1;
         outLocalPos = pivPos1;
     }
 
-    vec3 pivPos2 = p - vec3(0.0);
-    float twoSDF = sdSphere(pivPos2, 14.0);
+    vec3 pivPos2 = p - vec3(20.0, 0.0, 0.0);
+    float twoSDF = sdSphere(pivPos2, 7.0);
     if (twoSDF < d) {
         d = twoSDF;
         mat_id = MAT_SDF2;
@@ -74,15 +74,23 @@ float configSDF(vec3 p, out int mat_id, out vec3 outLocalPos) {
     return d;
 }
 
-// Configure color
-vec3 getMaterialColor(int mat, vec3 localPos) {
+// Configure shapes' visuals (color, opacity, etc)
+void materialVisuals(int mat, vec3 localPos, out vec3 color, out float opacity) {
     if (mat == MAT_SDF1) {
-        return vec3(1.0);
+        color = vec3(0.0, 1.0, 0.0);
+        opacity = 0.6;
+        return;
     }
+
     if (mat == MAT_SDF2) {
-        return vec3(0.0);
+        color = vec3(1.0,0.0,0.0);
+        opacity = 1.0;
+        return;
     }
-    return vec3(1.0,0.0,1.0); // if you see magenta, there was an id error
+
+    color = vec3(1.0,0.0,1.0);
+    opacity = 0.9;
+    // if you see magenta, there was an id error
 }
 
 void main() {
@@ -99,7 +107,19 @@ void main() {
     bool hit = false;
     float maxRayLen = distance(start_point, end_point);
 
+    int materialCount = 0;
+    vec3 matColor = vec3(0.0);
+    vec3 matTotalColor = vec3(0.0);
+    float matOpacity = 0.0;
+
+    vec3 firstColor = vec3(0.0);
+    float firstOpacity = 0.0;
+    vec3 secondColor = vec3(0.0);
+    float secondOpacity = 0.0;
+    vec3 mixedColor = vec3(0.0);
+
     int hitMat = MAT_NONE;
+    int lastMat = MAT_NONE;
     vec3 hitLocalPos = vec3(0.0);
 
     for (int i = 0; i < STEPS; i++) {
@@ -107,20 +127,49 @@ void main() {
         vec3 stepLocalPos;
 
         float d = configSDF(p, stepMat, stepLocalPos);
+
         if (d <= MIN_DIST) {
+            materialVisuals(stepMat, stepLocalPos, matColor, matOpacity);
+
             hit = true;
-            hitMat = stepMat;
             hitLocalPos = stepLocalPos;
-            break;
+
+            if (stepMat != lastMat && stepMat != MAT_NONE) {
+                materialCount++;
+
+                if (materialCount == 1) {
+                    firstColor = matColor;
+                    firstOpacity = matOpacity;
+                }
+
+                if (materialCount >= 2) {
+                    secondColor = matColor;
+                    secondOpacity = matOpacity;
+
+                    mixedColor = firstColor * firstOpacity + secondColor * (1 - firstOpacity);
+                }
+
+                lastMat = stepMat;
+            }
+
+            float escape = max(-d, MIN_DIST);
+            p += dir * escape;
+            traveled += escape;
+            if (traveled >= maxRayLen || traveled >= MAX_DIST) break;
+            continue;
         }
         traveled += d;
         if (traveled >= maxRayLen || traveled >= MAX_DIST) break;
         p += dir * d;
     }
 
-    if (hit) {
-        vec3 color = getMaterialColor(hitMat, hitLocalPos);
-        fragColor = vec4(color, 1.0);
+    if (materialCount == 1 && matOpacity >= 0.999) {
+        fragColor = vec4(matColor, 1.0);
+    } else if (materialCount == 2) {
+        fragColor = vec4(mixedColor, 1.0);
+    } else if (materialCount == 1 && matOpacity <= 0.999) {
+        vec3 finalColor = mix(original, matColor, matOpacity);
+        fragColor = vec4(finalColor, 1.0);
     } else {
         fragColor = vec4(original, 1.0);
     }
