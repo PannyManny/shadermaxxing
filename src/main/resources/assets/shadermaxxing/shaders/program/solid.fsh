@@ -1,5 +1,5 @@
 #version 330 compatibility
-#define STEPS 300
+#define STEPS 0
 #define MIN_DIST 0.001
 #define MAX_DIST 2500.0
 #define TWO_PI 6.28318530718
@@ -42,12 +42,6 @@ float sdSphere( vec3 p, float s )
 {
     return length(p)-s;
 }
-
-float sdCappedCylinder( vec3 p, float r, float h )
-{
-    vec2 d = abs(vec2(length(p.xz),p.y)) - vec2(r,h);
-    return min(max(d.x,d.y),0.0) + length(max(d,0.0));
-}
 //
 
 // Configure shapes' movement
@@ -56,15 +50,15 @@ float configSDF(vec3 p, out int mat_id, out vec3 outLocalPos) {
     mat_id = MAT_NONE;
 
     vec3 pivPos1 = p - vec3(0.0, 0.0, 0.0);
-    float oneSDF = sdSphere(pivPos1, 4.0);
+    float oneSDF = sdSphere(pivPos1, 0.0);
     if (oneSDF < d) {
         d = oneSDF;
         mat_id = MAT_SDF1;
         outLocalPos = pivPos1;
     }
 
-    vec3 pivPos2 = p - vec3(20.0, 0.0, 0.0);
-    float twoSDF = sdSphere(pivPos2, 7.0);
+    vec3 pivPos2 = p - vec3(0.0, 0.0, 0.0);
+    float twoSDF = sdSphere(pivPos2, 0.0);
     if (twoSDF < d) {
         d = twoSDF;
         mat_id = MAT_SDF2;
@@ -77,20 +71,18 @@ float configSDF(vec3 p, out int mat_id, out vec3 outLocalPos) {
 // Configure shapes' visuals (color, opacity, etc)
 void materialVisuals(int mat, vec3 localPos, out vec3 color, out float opacity) {
     if (mat == MAT_SDF1) {
-        color = vec3(0.0, 1.0, 0.0);
-        opacity = 0.6;
+        color = vec3(0.0, 0.0, 0.0);
         return;
     }
 
     if (mat == MAT_SDF2) {
-        color = vec3(1.0,0.0,0.0);
-        opacity = 1.0;
+        color = vec3(0.0,0.0,0.0);
         return;
     }
 
     color = vec3(1.0,0.0,1.0);
-    opacity = 0.9;
-    // if you see magenta, there was an id error
+    opacity = 1.0;
+    // if you see magenta, it couldn't find a color
 }
 
 void main() {

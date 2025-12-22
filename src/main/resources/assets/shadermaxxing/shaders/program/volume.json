@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "shadermaxxing:strike",
-  "fragment": "shadermaxxing:strike",
+  "vertex": "shadermaxxing:volume",
+  "fragment": "shadermaxxing:volume",
   "attributes": [ "Position" ],
   "samplers": [
     { "name": "DiffuseSampler" },

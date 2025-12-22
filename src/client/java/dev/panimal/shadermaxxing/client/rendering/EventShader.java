@@ -18,7 +18,7 @@ public class EventShader extends AbstractEventShader {
 
     @Override
     protected Identifier getIdentifier() {
-        return Identifier.of(Shadermaxxing.MOD_ID, "shaders/post/strike.json");
+        return Identifier.of(Shadermaxxing.MOD_ID, "shaders/post/shader.json");
     }
 
     @Override
