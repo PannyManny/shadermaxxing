@@ -24,6 +24,14 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 // slop functions
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+
 mat2 Rotate(float a) {
     float s = sin(a);
     float c = cos(a);
@@ -56,27 +64,30 @@ float sdSphere( vec3 p, float s )
 //
 
 // Configure movement and position
-void computeSDFs(vec3 p, out float sdf[VOL_COUNT]) {
+void computeSDFs(vec3 p, out float sdf[VOL_COUNT], out vec3 localPos[VOL_COUNT] ) {
 
     // Position
-    vec3 pivPos1 = p - vec3(0.0, 0.0, 0.0); // x y z coordinates (will be inversed)
-    vec3 pivPos2 = p - vec3(0.0, 0.0, 0.0);
-
-    float vol1 = sdSphere(pivPos1, 5.0);
-    float vol2 = sdRoundedCylinder(pivPos2, 20.0, 20.0, 2.0);
+    vec3 center1 = p - vec3(0.0, 0.0, 0.0); // x y z coordinates (will be inversed)
+    vec3 center2 = p - vec3(0.0, 0.0, 0.0);
 
     // Movement
     // pivPos2.xy *= Rotate(iTime);
 
+    // Size/Dimensions
+    float vol1 = sdSphere(center1, 5.0);
+    float vol2 = sdRoundedCylinder(center2, 100.0, 10.0, 0.5);
 
     // Compute
-    sdf[VOL_1] = sdSphere(p, 5.0);
-    sdf[VOL_2] = sdRoundedCylinder(p, 20.0, 20.0, 2.0);
-}
+    sdf[VOL_1] = vol1;
+    sdf[VOL_2] = vol2;
 
+    localPos[VOL_1] = center1;
+    localPos[VOL_2] = center2;
+}
 
 // Configure appearance
 void volumeVisuals( int id, vec3 localPos, out vec3 color, out float baseOpacity, out float falloff ) {
+
     if (id == VOL_1) {
         color = vec3(0.0, 0.0, 0.0);
         baseOpacity = 1.0;
@@ -85,9 +96,28 @@ void volumeVisuals( int id, vec3 localPos, out vec3 color, out float baseOpacity
     }
 
     if (id == VOL_2) {
-        color = vec3(0.93, 0.59, 0.11);
-        baseOpacity = 0.25;
-        falloff = 4.0;
+        float radius = length(localPos.xz);
+
+        // color
+        vec3 hsv = vec3(0.1, 0.2, 1.0);
+        float normRad = radius / 50.0;
+        hsv.x -= (0.05 * normRad) * 2;
+        hsv.y += (0.8 * normRad) * 3;
+        hsv.z -= (0.82 * normRad) * 1.6;
+        vec3 colorA = hsv2rgb(hsv);
+
+
+        // opacity
+        float clamp = clamp(radius / 50.0, 0.0, 1.0);
+        float smoothen = smoothstep(0.2, 0.8, clamp);
+        float inv = 1.0 - smoothen;
+        float interp = pow(inv, 2.0);
+
+        float opacityA = interp * 2.0;
+
+        color = colorA;
+        baseOpacity = opacityA;
+        falloff = 30.0;
         return;
     }
 
@@ -127,7 +157,8 @@ vec4 raymarchVolume(vec3 ro, vec3 rd) {
         vec3 p = ro + rd * ray;
 
         float sdf[VOL_COUNT];
-        computeSDFs(p, sdf);
+        vec3 localPos[VOL_COUNT];
+        computeSDFs(p, sdf, localPos);
 
         for (int id = 0; id < VOL_COUNT; id++) {
 
@@ -137,7 +168,7 @@ vec4 raymarchVolume(vec3 ro, vec3 rd) {
             vec3 color;
             float baseOpacity;
             float falloff;
-            volumeVisuals(id, p, color, baseOpacity, falloff);
+            volumeVisuals(id, localPos[id], color, baseOpacity, falloff);
 
             float density = densityFromSD(sdf[id], falloff);
             float alpha = density * baseOpacity * STEP_SIZE;
@@ -151,7 +182,6 @@ vec4 raymarchVolume(vec3 ro, vec3 rd) {
 
     return accum;
 }
-
 
 void main() {
     vec3 original = texture(DiffuseSampler, texCoord).rgb;
